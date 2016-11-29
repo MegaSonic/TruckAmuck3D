@@ -27,16 +27,20 @@ public class Player : MonoBehaviour {
 
     public float distToGround;
 
+    private bool usedDoubleJump;
     private float gravityY;
     private float rigidY;
 
-	// Use this for initialization
-	void Start () {
+    void Awake()
+    {
         rigid = GetComponent<Rigidbody>();
-        // gravity = Physics.gravity;
         state = PlayerState.JUMPING;
         distToGround = GetComponent<CapsuleCollider>().bounds.extents.y;
-        // rigid.AddForce(gravity, ForceMode.Acceleration);
+    }
+
+    // Use this for initialization
+    void Start () {
+        
         rigid.velocity = new Vector3(rigid.velocity.x, rigid.velocity.y + gravity * Time.deltaTime, rigid.velocity.z);
 	}
 	
@@ -81,6 +85,7 @@ public class Player : MonoBehaviour {
                 {
                     state = PlayerState.JUMPING;
                     rigid.velocity = new Vector3(rigid.velocity.x, jumpForce, rigid.velocity.z);
+                    isGrounded = false;
                     break;
                 }
 
@@ -106,6 +111,7 @@ public class Player : MonoBehaviour {
                 {
                     state = PlayerState.JUMPING;
                     rigid.velocity = new Vector3(rigid.velocity.x, jumpForce, rigid.velocity.z);
+                    isGrounded = false;
                     break;
                 }
 
@@ -119,6 +125,7 @@ public class Player : MonoBehaviour {
                 {
                     if (noAxisInput) state = PlayerState.IDLE;
                     else state = PlayerState.RUNNING;
+                    usedDoubleJump = false;
                     break;
                 }
                 
@@ -147,6 +154,7 @@ public class Player : MonoBehaviour {
 
     public bool IsGrounded()
     {
+        Debug.DrawRay(transform.position, -Vector3.up, Color.green);
         return (Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.005f) && velocity.y <= 0f);
     }
 }
