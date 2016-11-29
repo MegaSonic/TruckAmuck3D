@@ -1,84 +1,152 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum PlayerState
+{
+    IDLE = 0,
+    RUNNING = 1,
+    DASHING = 2,
+    TAUNTING = 3,
+    JUMPING = 4,
+    AIRDASHING = 5
+}
+
 public class Player : MonoBehaviour {
 
-    public Rigidbody rigid;
+    public PlayerState state;
+
+    private Rigidbody rigid;
 
     public float speed;
+    public float gravity;
+    public float jumpForce;
+    public Vector3 velocity;
 
+    public bool noAxisInput;
+    public bool isGrounded;
+
+    public float distToGround;
+
+    private float gravityY;
+    private float rigidY;
 
 	// Use this for initialization
 	void Start () {
         rigid = GetComponent<Rigidbody>();
+        // gravity = Physics.gravity;
+        state = PlayerState.JUMPING;
+        distToGround = GetComponent<CapsuleCollider>().bounds.extents.y;
+        // rigid.AddForce(gravity, ForceMode.Acceleration);
+        rigid.velocity = new Vector3(rigid.velocity.x, rigid.velocity.y + gravity * Time.deltaTime, rigid.velocity.z);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        /*
-        // we need some axis derived from camera but aligned with floor plane
-        Vector3 forward = Camera.main.transform.TransformDirection(Vector3.forward);
-        forward.y = 0f;
-        forward = forward.normalized;
-        Vector3 right = new Vector3(forward.z, 0.0f, -forward.x);
-        */
+
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
-
         Vector3 movement = new Vector3(h, 0.0f, v);
+        rigidY = rigid.velocity.y;
+        isGrounded = IsGrounded();
+        velocity = rigid.velocity;
 
-        movement = Camera.main.transform.TransformDirection(movement);
-        movement.y = 0f;
-        movement = movement.normalized;
-        rigid.velocity = movement * speed * Time.deltaTime;
+        noAxisInput = false;
 
-        /*
-        if (Input.GetAxis("Horizontal") < 0)
+        if (Mathf.Approximately(h, 0f))
         {
-            if (Input.GetAxis("Vertical") < 0)
+            if (Mathf.Approximately(v, 0f))
             {
-                rigid.velocity = new Vector3(speed, 0, 0);
+                noAxisInput = true;
             }
-            else if (Input.GetAxis("Vertical") > 0)
-            {
-                rigid.velocity = new Vector3(speed, 0, 0);
-            }
-            else
-            {
-
-            }
+            
         }
-        else if (Input.GetAxis("Horizontal") > 0)
+
+        switch (state)
         {
-            if (Input.GetAxis("Vertical") < 0)
-            {
-                rigid.velocity = new Vector3(-speed, 0, 0);
-            }
-            else if (Input.GetAxis("Vertical") > 0)
-            {
-                rigid.velocity = new Vector3(-speed, 0, 0);
-            }
-            else
-            {
+            case PlayerState.IDLE:
+                
+                if (!noAxisInput)
+                {
+                    state = PlayerState.RUNNING;
+                }
 
-            }
+                movement = Camera.main.transform.TransformDirection(movement);
+                movement.y = 0f;
+                movement = movement.normalized;
+                rigid.velocity = movement * speed * Time.deltaTime;
+                rigid.velocity = new Vector3(rigid.velocity.x, 0f, rigid.velocity.z);
+                
+
+                if (Input.GetButtonDown("Jump"))
+                {
+                    state = PlayerState.JUMPING;
+                    rigid.velocity = new Vector3(rigid.velocity.x, jumpForce, rigid.velocity.z);
+                    break;
+                }
+
+                break;
+
+            case PlayerState.RUNNING:
+
+                if (noAxisInput)
+                {
+                    state = PlayerState.IDLE;
+                    break;
+                }
+
+                movement = Camera.main.transform.TransformDirection(movement);
+                movement.y = 0f;
+                movement = movement.normalized;
+                rigid.velocity = movement * speed * Time.deltaTime;
+                rigid.velocity = new Vector3(rigid.velocity.x, 0f, rigid.velocity.z);
+
+                
+
+                if (Input.GetButtonDown("Jump"))
+                {
+                    state = PlayerState.JUMPING;
+                    rigid.velocity = new Vector3(rigid.velocity.x, jumpForce, rigid.velocity.z);
+                    break;
+                }
+
+                break;
+
+            case PlayerState.JUMPING:
+                rigid.velocity = new Vector3(rigid.velocity.x, rigid.velocity.y + gravity * Time.deltaTime, rigid.velocity.z);
+                rigidY = rigid.velocity.y;
+
+                if (isGrounded)
+                {
+                    if (noAxisInput) state = PlayerState.IDLE;
+                    else state = PlayerState.RUNNING;
+                    break;
+                }
+                
+
+                movement = Camera.main.transform.TransformDirection(movement);
+                movement.y = 0f;
+                movement = movement.normalized;
+                rigid.velocity = movement * speed * Time.deltaTime;
+                rigid.velocity = new Vector3(rigid.velocity.x, rigidY, rigid.velocity.z);
+
+                break;
+
+            default:
+                break;
         }
-        else
-        {
-            if (Input.GetAxis("Vertical") < 0)
-            {
 
-            }
-            else if (Input.GetAxis("Vertical") > 0)
-            {
 
-            }
-            else
-            {
-
-            }
-        }
-        */
         
+
+        
+
+        
+    }
+
+
+
+    public bool IsGrounded()
+    {
+        return (Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.005f) && velocity.y <= 0f);
     }
 }
