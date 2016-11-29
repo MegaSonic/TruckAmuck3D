@@ -30,6 +30,7 @@ public class Player : MonoBehaviour {
     private bool usedDoubleJump;
     private float gravityY;
     private float rigidY;
+    private RaycastHit hitInfo;
 
     void Awake()
     {
@@ -52,14 +53,17 @@ public class Player : MonoBehaviour {
         Vector3 movement = new Vector3(h, 0.0f, v);
         rigidY = rigid.velocity.y;
         isGrounded = IsGrounded();
+
         velocity = rigid.velocity;
 
         noAxisInput = false;
 
+        if (!isGrounded && state != PlayerState.JUMPING) Debug.Break();
+
         if (Mathf.Approximately(h, 0f))
         {
             if (Mathf.Approximately(v, 0f))
-            {
+            { 
                 noAxisInput = true;
             }
             
@@ -155,6 +159,6 @@ public class Player : MonoBehaviour {
     public bool IsGrounded()
     {
         Debug.DrawRay(transform.position, -Vector3.up, Color.green);
-        return (Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.005f) && velocity.y <= 0f);
+        return (Physics.Raycast(transform.position, -Vector3.up, out hitInfo, distToGround + 0.005f) && rigid.velocity.y <= 0.01f);
     }
 }
