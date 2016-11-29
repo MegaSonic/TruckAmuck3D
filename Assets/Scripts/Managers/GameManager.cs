@@ -33,11 +33,17 @@ public class GameManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
-	}
+        if (Input.GetButton("DEBUG_CAMERA"))
+        {
+            Debug.Log("Switching Camera");
+            //switch camera here 
+        }
+    }
 
     public void LoadLevel(int buildIndex)
     {
         SceneManager.LoadScene(buildIndex);
     }
+
+
 }

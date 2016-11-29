@@ -38,7 +38,6 @@ public class UIManager : MonoBehaviour {
         if (Input.GetButton("Submit") && !fadingIn)
         {
             fadingIn = true;
-            Debug.Log("bam");
             StartCoroutine(FadeOutToLevelOne());
         }
 	
